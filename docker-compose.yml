@@ -1,0 +1,71 @@
+name: jenkins
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+    compress: "true"
+
+services:
+  jenkins:
+    image: jenkins/jenkins:${JENKINS_TAG:-2.580.1-alpine-jdk25}
+    container_name: jenkins
+    restart: unless-stopped
+    stop_grace_period: 60s
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    environment:
+      TZ: "${TZ:-Europe/Athens}"
+      # Heap at 60% leaves room for metaspace, threads and native memory.
+      # G1 explicitly: below 2 CPUs / ~1.8 GB the JVM silently falls back to SerialGC.
+      JAVA_OPTS: "-XX:MaxRAMPercentage=${JENKINS_HEAP_PERCENT:-60} -XX:+UseG1GC"
+    volumes:
+      - home:/var/jenkins_home
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 180s
+      start_interval: 5s
+    logging: *default-logging
+    deploy:
+      resources:
+        limits:
+          # noinspection ComposeUnknownValues
+          cpus: "${JENKINS_CPU_LIMIT:-2}"
+          # noinspection ComposeUnknownValues
+          memory: "${JENKINS_MEMORY_LIMIT:-2G}"
+          # Counts threads too — Jenkins runs hundreds, so keep this generous.
+          # noinspection ComposeUnknownValues
+          pids: ${JENKINS_PIDS_LIMIT:-2048}
+        reservations:
+          # noinspection ComposeUnknownValues
+          memory: "${JENKINS_MEMORY_RESERVATION:-1G}"
+    labels:
+      - "traefik.enable=true"
+      # HTTP router (TLS comes from the websecure entrypoint's wildcard default)
+      - "traefik.http.routers.jenkins.rule=Host(`${DOMAIN:?DOMAIN is required}`)"
+      - "traefik.http.routers.jenkins.entrypoints=websecure"
+      - "traefik.http.routers.jenkins.service=jenkins"
+      - "traefik.http.routers.jenkins.middlewares=jenkins-ipallowlist"
+      - "traefik.http.middlewares.jenkins-ipallowlist.ipallowlist.sourcerange=${IPV4_ALLOWLIST:-0.0.0.0/0},${IPV6_ALLOWLIST:-::/0}"
+      - "traefik.http.services.jenkins.loadbalancer.server.port=8080"
+      # TCP router for inbound agents (port 50000)
+      - "traefik.tcp.routers.jenkins.rule=HostSNI(`*`)"
+      - "traefik.tcp.routers.jenkins.entrypoints=tcp50000"
+      - "traefik.tcp.routers.jenkins.service=jenkins"
+      - "traefik.tcp.routers.jenkins.middlewares=jenkins-ipallowlist"
+      - "traefik.tcp.middlewares.jenkins-ipallowlist.ipallowlist.sourcerange=${IPV4_ALLOWLIST:-0.0.0.0/0},${IPV6_ALLOWLIST:-::/0}"
+      - "traefik.tcp.services.jenkins.loadbalancer.server.port=50000"
+
+networks:
+  jenkins:
+    name: jenkins
+
+volumes:
+  home:
+    name: jenkins-home
