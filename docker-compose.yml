@@ -56,13 +56,6 @@ services:
       - "traefik.http.routers.jenkins.middlewares=jenkins-ipallowlist"
       - "traefik.http.middlewares.jenkins-ipallowlist.ipallowlist.sourcerange=${IPV4_ALLOWLIST:-0.0.0.0/0},${IPV6_ALLOWLIST:-::/0}"
       - "traefik.http.services.jenkins.loadbalancer.server.port=8080"
-      # TCP router for inbound agents (port 50000)
-      - "traefik.tcp.routers.jenkins.rule=HostSNI(`*`)"
-      - "traefik.tcp.routers.jenkins.entrypoints=tcp50000"
-      - "traefik.tcp.routers.jenkins.service=jenkins"
-      - "traefik.tcp.routers.jenkins.middlewares=jenkins-ipallowlist"
-      - "traefik.tcp.middlewares.jenkins-ipallowlist.ipallowlist.sourcerange=${IPV4_ALLOWLIST:-0.0.0.0/0},${IPV6_ALLOWLIST:-::/0}"
-      - "traefik.tcp.services.jenkins.loadbalancer.server.port=50000"
 
 networks:
   jenkins:

@@ -1,8 +1,7 @@
 # Jenkins
 
 A single-container Jenkins controller run with Docker Compose. It sits behind
-[Traefik](https://traefik.io/), which serves the web UI over HTTPS and passes
-the inbound agent port (50000) through as plain TCP.
+[Traefik](https://traefik.io/), which serves the web UI over HTTPS.
 
 ## Requirements
 
@@ -10,7 +9,6 @@ the inbound agent port (50000) through as plain TCP.
 - A Traefik instance that:
   - has a `websecure` entrypoint with a default certificate covering `DOMAIN`
     (for example a wildcard)
-  - has a `tcp50000` entrypoint for inbound agents
   - is attached to the `jenkins` Docker network (this stack creates it)
 - A DNS record for `DOMAIN` that points to the Traefik host
 
@@ -40,8 +38,8 @@ All settings are read from `.env`.
 |------------------------------|------------------------|-----------------------------------------------------------------|
 | `JENKINS_TAG`                | `2.580.1-alpine-jdk25` | Image tag of `jenkins/jenkins`. Pin an exact LTS release.       |
 | `DOMAIN`                     | **required**           | Hostname Traefik routes to Jenkins.                             |
-| `IPV4_ALLOWLIST`             | `0.0.0.0/0`            | IPv4 ranges allowed to reach the UI and agent port, comma-separated. |
-| `IPV6_ALLOWLIST`             | `::/0`                 | IPv6 ranges allowed to reach the UI and agent port, comma-separated. |
+| `IPV4_ALLOWLIST`             | `0.0.0.0/0`            | IPv4 ranges allowed to reach the UI, comma-separated.           |
+| `IPV6_ALLOWLIST`             | `::/0`                 | IPv6 ranges allowed to reach the UI, comma-separated.           |
 | `TZ`                         | `Europe/Athens`        | Container time zone.                                            |
 | `JENKINS_HEAP_PERCENT`       | `60`                   | JVM max heap as a percentage of the memory limit.               |
 | `JENKINS_CPU_LIMIT`          | `2`                    | CPU limit.                                                      |
