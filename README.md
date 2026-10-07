@@ -40,6 +40,8 @@ All settings are read from `.env`.
 | `DOMAIN`                     | **required**           | Hostname Traefik routes to Jenkins.                             |
 | `IPV4_ALLOWLIST`             | `0.0.0.0/0`            | IPv4 ranges allowed to reach the UI, comma-separated.           |
 | `IPV6_ALLOWLIST`             | `::/0`                 | IPv6 ranges allowed to reach the UI, comma-separated.           |
+| `JENKINS_NETWORK_SUBNET_V4`  | `10.100.0.0/24`        | IPv4 subnet of the `jenkins` network.                           |
+| `JENKINS_NETWORK_SUBNET_V6`  | `fd00:100::/64`        | IPv6 subnet of the `jenkins` network.                           |
 | `TZ`                         | `Europe/Athens`        | Container time zone.                                            |
 | `JENKINS_HEAP_PERCENT`       | `60`                   | JVM max heap as a percentage of the memory limit.               |
 | `JENKINS_CPU_LIMIT`          | `2`                    | CPU limit.                                                      |
@@ -59,6 +61,8 @@ instance.
   native memory.
 - **Health check:** `wget` polls `/health` every 30s, with a 180s start period.
 - **Logs:** the json-file driver rotates and compresses them (5 × 10 MB).
+- **Network:** the `jenkins` bridge network is dual-stack (IPv4 + IPv6), with
+  subnets set by `JENKINS_NETWORK_SUBNET_V4` and `JENKINS_NETWORK_SUBNET_V6`.
 - **Data:** everything is stored in the `jenkins-home` named volume, mounted at
   `/var/jenkins_home`.
 

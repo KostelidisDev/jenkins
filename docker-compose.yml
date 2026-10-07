@@ -60,6 +60,11 @@ services:
 networks:
   jenkins:
     name: jenkins
+    enable_ipv6: true
+    ipam:
+      config:
+        - subnet: "${JENKINS_NETWORK_SUBNET_V4:-10.100.0.0/24}"
+        - subnet: "${JENKINS_NETWORK_SUBNET_V6:-fd00:100::/64}"
 
 volumes:
   home:
